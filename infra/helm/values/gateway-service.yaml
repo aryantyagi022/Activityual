@@ -1,0 +1,25 @@
+nameOverride: gateway-service
+image: { repository: REPLACE_ME_ECR/activityual/gateway-service, tag: latest }
+service: { port: 80, targetPort: 8080 }
+config:
+  RABBIT_HOST: rabbitmq.platform.svc.cluster.local
+  RABBIT_PORT: "5672"
+  AUTH_URL: http://auth-service
+  ACTIVITY_URL: http://activity-service
+  TRACKING_URL: http://tracking-service
+  ANALYTICS_URL: http://analytics-service
+  COACH_URL: http://coach-service
+  RECO_URL: http://recommendation-service
+  NOTIF_URL: http://notification-service
+secrets:
+  JWT_SECRET: "change-me-please-change-me-please-32bytes!!"
+  DB_PASSWORD: "unused"
+ingress:
+  enabled: true
+  className: alb
+  host: api.activityual.example.com
+  path: /
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'

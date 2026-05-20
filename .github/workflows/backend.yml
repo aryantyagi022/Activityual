@@ -1,0 +1,82 @@
+name: backend
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'backend/**', 'infra/helm/**', '.github/workflows/backend.yml' ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+  ECR_PREFIX: activityual
+  EKS_CLUSTER: activityual-eks
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - gateway-service
+          - auth-service
+          - activity-service
+          - tracking-service
+          - analytics-service
+          - coach-service
+          - recommendation-service
+          - notification-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven }
+
+      - name: Maven package
+        working-directory: backend
+        run: mvn -B -DskipTests -pl ${{ matrix.service }} -am package
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT }}:role/github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build & push image
+        working-directory: backend
+        env:
+          IMG: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_PREFIX }}/${{ matrix.service }}
+        run: |
+          docker build -f ${{ matrix.service }}/Dockerfile -t $IMG:${{ github.sha }} -t $IMG:latest .
+          docker push $IMG:${{ github.sha }}
+          docker push $IMG:latest
+
+      - name: Trivy scan (non-blocking)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_PREFIX }}/${{ matrix.service }}:${{ github.sha }}
+          exit-code: '0'
+          severity: HIGH,CRITICAL
+
+      - uses: azure/setup-helm@v4
+        with: { version: v3.15.4 }
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER }} --region ${{ env.AWS_REGION }}
+
+      - name: Helm upgrade
+        env:
+          IMG: ${{ steps.ecr.outputs.registry }}/${{ env.ECR_PREFIX }}/${{ matrix.service }}
+        run: |
+          helm upgrade --install ${{ matrix.service }} infra/helm/activityual-service \
+            -f infra/helm/values/${{ matrix.service }}.yaml \
+            --set image.repository=$IMG --set image.tag=${{ github.sha }} \
+            --namespace activityual --create-namespace --wait --timeout 5m
+

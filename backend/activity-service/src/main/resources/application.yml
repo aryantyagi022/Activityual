@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: activity-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/activitydb}
+    username: ${SPRING_DATASOURCE_USERNAME:activityual}
+    password: ${SPRING_DATASOURCE_PASSWORD:activityual}
+  jpa:
+    hibernate: { ddl-auto: validate }
+    open-in-view: false
+  flyway: { enabled: true, baseline-on-migrate: true }
+
+server: { port: 8082 }
+
+management:
+  endpoints:
+    web: { exposure: { include: health,info,prometheus } }
+
+springdoc:
+  swagger-ui: { path: /swagger }
+

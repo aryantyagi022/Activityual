@@ -1,0 +1,50 @@
+# --- OS / IDE ---
+.DS_Store
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# --- Java / Maven ---
+target/
+*.class
+*.jar
+*.war
+*.log
+hs_err_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Node / SvelteKit ---
+node_modules/
+.svelte-kit/
+build/
+.vite/
+.pnpm-store/
+dist/
+
+# --- Env / Secrets ---
+.env
+.env.local
+*.pem
+*.key
+
+# --- Terraform ---
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*.auto.tfvars
+
+# --- Helm ---
+charts/*.tgz
+
+# --- Data volumes (compose) ---
+.data/
+ollama-models/
+chroma-data/
+
+# Personal/private — will be added back manually before submission
+/docs/
+/infra/network-diagram/

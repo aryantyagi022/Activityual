@@ -1,0 +1,16 @@
+# Reusable multi-stage Dockerfile fragment. Each service Dockerfile is a 4-line
+# copy of this one but with its own MODULE arg. Kept here for reference.
+ARG MODULE=auth-service
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /src
+COPY . .
+RUN ./mvnw -T 1C -q -DskipTests -pl ${MODULE} -am package
+
+FROM gcr.io/distroless/java21-debian12:nonroot
+WORKDIR /app
+ARG MODULE
+COPY --from=build /src/${MODULE}/target/*.jar /app/app.jar
+EXPOSE 8080
+USER nonroot
+ENTRYPOINT ["java","-jar","/app/app.jar"]
+

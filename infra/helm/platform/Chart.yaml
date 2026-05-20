@@ -1,0 +1,7 @@
+apiVersion: v2
+name: activityual-platform
+description: Platform services (RabbitMQ, Chroma, Ollama) installed once per cluster
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+

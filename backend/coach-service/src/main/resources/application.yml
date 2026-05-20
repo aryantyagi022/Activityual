@@ -1,0 +1,22 @@
+spring:
+  application: { name: coach-service }
+  main: { web-application-type: servlet }
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+
+server: { port: 8085 }
+
+chroma:
+  url: ${CHROMA_URL:http://localhost:8000}
+
+ollama:
+  url: ${OLLAMA_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:llama3.2:3b}
+  embedding-model: ${OLLAMA_EMBED_MODEL:nomic-embed-text}
+
+management: { endpoints: { web: { exposure: { include: health,info,prometheus } } } }
+springdoc: { swagger-ui: { path: /swagger } }
+

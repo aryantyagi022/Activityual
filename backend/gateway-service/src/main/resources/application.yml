@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: ${AUTH_URL:http://localhost:8081}
+          predicates: [Path=/auth/**]
+        - id: activities
+          uri: ${ACTIVITY_URL:http://localhost:8082}
+          predicates: [Path=/activities/**]
+          filters: [JwtAuthFilter]
+        - id: tracking
+          uri: ${TRACKING_URL:http://localhost:8083}
+          predicates: [Path=/logs/**]
+          filters: [JwtAuthFilter]
+        - id: analytics
+          uri: ${ANALYTICS_URL:http://localhost:8084}
+          predicates: [Path=/analytics/**]
+          filters: [JwtAuthFilter]
+        - id: coach
+          uri: ${COACH_URL:http://localhost:8085}
+          predicates: [Path=/coach/**]
+          filters: [JwtAuthFilter]
+        - id: recommendations
+          uri: ${RECO_URL:http://localhost:8086}
+          predicates: [Path=/recommendations/**]
+          filters: [JwtAuthFilter]
+        - id: notifications
+          uri: ${NOTIF_URL:http://localhost:8087}
+          predicates: [Path=/notifications/**]
+          filters: [JwtAuthFilter]
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:change-me-please-change-me-please-32bytes!!}
+  access-ttl-min: ${JWT_ACCESS_TTL_MIN:15}
+  refresh-ttl-days: ${JWT_REFRESH_TTL_DAYS:7}
+
+cors:
+  allowed-origins: ${CORS_ORIGINS:*}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+

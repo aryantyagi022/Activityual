@@ -1,0 +1,33 @@
+name: frontend
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'frontend/**', '.github/workflows/frontend.yml' ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm', cache-dependency-path: frontend/package.json }
+      - working-directory: frontend
+        run: |
+          npm install --no-audit --no-fund
+          PUBLIC_API_BASE=${{ secrets.PUBLIC_API_BASE }} npm run build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+      - run: |
+          aws s3 sync frontend/build s3://${{ secrets.FRONTEND_BUCKET }} --delete
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths '/*'
+

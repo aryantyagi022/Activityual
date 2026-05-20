@@ -1,0 +1,17 @@
+rabbitmq:
+  image: rabbitmq:3.13-management
+  storage: 5Gi
+chroma:
+  image: chromadb/chroma:0.5.20
+  storage: 10Gi
+ollama:
+  image: ollama/ollama:0.3.14
+  storage: 20Gi
+  model: llama3.2:3b
+  nodeSelector: { workload: ai }
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: ai
+      effect: NoSchedule
+

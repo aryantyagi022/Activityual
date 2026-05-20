@@ -1,0 +1,7 @@
+CREATE DATABASE authdb;
+CREATE DATABASE activitydb;
+CREATE DATABASE trackingdb;
+CREATE DATABASE analyticsdb;
+CREATE DATABASE recodb;
+CREATE DATABASE notifdb;
+
