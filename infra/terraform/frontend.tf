@@ -17,6 +17,33 @@ resource "aws_cloudfront_origin_access_control" "frontend" {
   signing_protocol                  = "sigv4"
 }
 
+# --- API proxy: forward /api/* to the EKS ALB (gateway-service) ---
+variable "gateway_alb_hostname" {
+  type        = string
+  description = "Public DNS hostname of the gateway ALB (from kubectl get ingress)."
+  default     = ""
+}
+
+# CloudFront viewer-request function: strip the leading /api prefix before forwarding to the ALB origin.
+resource "aws_cloudfront_function" "strip_api_prefix" {
+  count   = var.gateway_alb_hostname == "" ? 0 : 1
+  name    = "${var.project}-strip-api-prefix"
+  runtime = "cloudfront-js-2.0"
+  comment = "Strip /api prefix before forwarding to ALB origin"
+  publish = true
+  code    = <<-EOT
+    function handler(event) {
+      var req = event.request;
+      if (req.uri.startsWith('/api/')) {
+        req.uri = req.uri.substring(4); // remove '/api'
+      } else if (req.uri === '/api') {
+        req.uri = '/';
+      }
+      return req;
+    }
+  EOT
+}
+
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   default_root_object = "index.html"
@@ -25,6 +52,20 @@ resource "aws_cloudfront_distribution" "frontend" {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
     origin_id                = "s3-frontend"
     origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
+  }
+
+  dynamic "origin" {
+    for_each = var.gateway_alb_hostname == "" ? [] : [var.gateway_alb_hostname]
+    content {
+      domain_name = origin.value
+      origin_id   = "alb-gateway"
+      custom_origin_config {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "http-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
+    }
   }
 
   default_cache_behavior {
@@ -36,6 +77,32 @@ resource "aws_cloudfront_distribution" "frontend" {
       query_string = false
       cookies {
         forward = "none"
+      }
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = var.gateway_alb_hostname == "" ? [] : [1]
+    content {
+      path_pattern           = "/api/*"
+      target_origin_id       = "alb-gateway"
+      viewer_protocol_policy = "https-only"
+      allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+      cached_methods         = ["GET", "HEAD"]
+      min_ttl                = 0
+      default_ttl            = 0
+      max_ttl                = 0
+      compress               = true
+      forwarded_values {
+        query_string = true
+        headers      = ["Authorization", "Content-Type", "Origin", "Accept", "X-User-Id"]
+        cookies {
+          forward = "all"
+        }
+      }
+      function_association {
+        event_type   = "viewer-request"
+        function_arn = aws_cloudfront_function.strip_api_prefix[0].arn
       }
     }
   }
