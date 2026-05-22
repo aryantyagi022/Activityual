@@ -6,8 +6,8 @@ service:
   port: 80
   targetPort: 8081
 config:
-  RABBIT_HOST: rabbitmq.platform.svc.cluster.local
-  RABBIT_PORT: "5672"
+  SPRING_RABBITMQ_HOST: rabbitmq.platform.svc.cluster.local
+  SPRING_RABBITMQ_PORT: "5672"
   SPRING_DATASOURCE_URL: jdbc:postgresql://activityual-rds.cgfueeqgoqyo.us-east-1.rds.amazonaws.com:5432/authdb
   SPRING_DATASOURCE_USERNAME: activityual
 secrets:

@@ -24,9 +24,22 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-deploy
           aws-region: us-east-1
       - run: terraform fmt -check
-      - run: terraform init
+      - name: terraform init
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.AWS_ACCOUNT_ID }}-activityual-tfstate" \
+            -backend-config="key=activityual/terraform.tfstate" \
+            -backend-config="region=us-east-1"
       - run: terraform validate
-      - run: terraform plan -no-color
+      - name: terraform plan
+        run: |
+          terraform plan -no-color \
+            -var="github_repo=${{ github.repository }}" \
+            -var="tfstate_bucket=${{ secrets.AWS_ACCOUNT_ID }}-activityual-tfstate"
       - if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        run: terraform apply -auto-approve
+        name: terraform apply
+        run: |
+          terraform apply -auto-approve \
+            -var="github_repo=${{ github.repository }}" \
+            -var="tfstate_bucket=${{ secrets.AWS_ACCOUNT_ID }}-activityual-tfstate"
 

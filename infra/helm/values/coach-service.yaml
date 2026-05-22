@@ -2,8 +2,8 @@ nameOverride: coach-service
 image: { repository: REPLACE_ME_ECR/activityual/coach-service, tag: latest }
 service: { port: 80, targetPort: 8085 }
 config:
-  RABBIT_HOST: rabbitmq.platform.svc.cluster.local
-  RABBIT_PORT: "5672"
+  SPRING_RABBITMQ_HOST: rabbitmq.platform.svc.cluster.local
+  SPRING_RABBITMQ_PORT: "5672"
   CHROMA_URL: http://chroma.platform.svc.cluster.local:8000
   OLLAMA_URL: http://ollama.platform.svc.cluster.local:11434
   OLLAMA_MODEL: llama3.2:3b

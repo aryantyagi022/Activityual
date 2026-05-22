@@ -30,6 +30,10 @@ spec:
             {{- end }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.probes.enabled }}
+          startupProbe:
+            httpGet: { path: {{ .Values.probes.path }}, port: {{ .Values.service.targetPort }} }
+            periodSeconds: 10
+            failureThreshold: 30
           readinessProbe:
             httpGet: { path: {{ .Values.probes.path }}, port: {{ .Values.service.targetPort }} }
             initialDelaySeconds: {{ .Values.probes.initialDelaySeconds }}
