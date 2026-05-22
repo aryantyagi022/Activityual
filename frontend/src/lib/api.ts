@@ -1,8 +1,9 @@
 import { get } from 'svelte/store';
 import { auth } from '$lib/stores/auth';
 import { toast } from '$lib/stores/toast';
+import { env } from '$env/dynamic/public';
 
-const BASE = (import.meta as any).env?.PUBLIC_API_BASE ?? 'http://localhost:8080';
+const BASE = env.PUBLIC_API_BASE || 'http://localhost:8080';
 
 async function request<T>(method: string, path: string, body?: unknown, requireAuth = true): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
