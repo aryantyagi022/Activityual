@@ -24,6 +24,10 @@ spec:
                 name: {{ include "svc.name" . }}-config
             - secretRef:
                 name: {{ include "svc.name" . }}-secret
+            {{- range .Values.extraEnvFromSecrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
           resources: {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.probes.enabled }}
           readinessProbe:

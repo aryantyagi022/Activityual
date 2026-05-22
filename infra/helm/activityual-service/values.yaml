@@ -24,8 +24,9 @@ config:
   RABBIT_PORT: "5672"
 
 secrets:
-  JWT_SECRET: "change-me-please-change-me-please-32bytes!!"
-  DB_PASSWORD: "activityual"
+  PLACEHOLDER: "unused"
+
+extraEnvFromSecrets: []
 
 probes:
   enabled: true
@@ -42,7 +43,7 @@ hpa:
 ingress:
   enabled: false
   className: alb
-  host: api.activityual.example.com
+  host: ""
   path: /
   annotations: {}
 

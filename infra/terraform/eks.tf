@@ -19,7 +19,8 @@ module "eks" {
       subnet_ids     = aws_subnet.app[*].id
     }
     ai = {
-      instance_types = ["t3.xlarge"]
+      capacity_type  = "SPOT"
+      instance_types = ["t3.xlarge", "t3a.xlarge", "m5.xlarge"]
       min_size       = 1
       max_size       = 2
       desired_size   = 1

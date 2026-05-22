@@ -8,13 +8,9 @@ service:
 config:
   RABBIT_HOST: rabbitmq.platform.svc.cluster.local
   RABBIT_PORT: "5672"
-  SPRING_DATASOURCE_URL: jdbc:postgresql://activityual-rds.cluster-x.us-east-1.rds.amazonaws.com:5432/trackingdb
+  SPRING_DATASOURCE_URL: jdbc:postgresql://activityual-rds.cgfueeqgoqyo.us-east-1.rds.amazonaws.com:5432/trackingdb
   SPRING_DATASOURCE_USERNAME: activityual
 secrets:
-  JWT_SECRET: "change-me-please-change-me-please-32bytes!!"
-  SPRING_DATASOURCE_PASSWORD: "REPLACE_ME"
-probes:
-  enabled: true
-  path: /actuator/health
-  initialDelaySeconds: 45
-  periodSeconds: 10
+  PLACEHOLDER: "unused"
+extraEnvFromSecrets:
+  - activityual-shared

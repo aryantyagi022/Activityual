@@ -30,12 +30,16 @@ dist/
 
 # --- Terraform ---
 .terraform/
+.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 crash.log
 override.tf
 override.tf.json
 *.auto.tfvars
+infra/terraform/terraform.tfvars
+infra/terraform/tfplan
+.aws-outputs.txt
 
 # --- Helm ---
 charts/*.tgz

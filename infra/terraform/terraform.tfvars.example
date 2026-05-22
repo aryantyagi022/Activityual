@@ -1,0 +1,2 @@
+github_repo    = "owner/repo"
+tfstate_bucket = "123456789012-activityual-tfstate"

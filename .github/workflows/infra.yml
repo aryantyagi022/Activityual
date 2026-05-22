@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: [ 'infra/terraform/**' ]
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths: [ 'infra/terraform/**' ]
   workflow_dispatch:
 
@@ -27,6 +27,6 @@ jobs:
       - run: terraform init
       - run: terraform validate
       - run: terraform plan -no-color
-      - if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      - if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
         run: terraform apply -auto-approve
 

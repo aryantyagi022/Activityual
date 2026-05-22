@@ -1,7 +1,7 @@
 locals {
   services = [
-    "gateway-service","auth-service","activity-service","tracking-service",
-    "analytics-service","coach-service","recommendation-service","notification-service"
+    "gateway-service", "auth-service", "activity-service", "tracking-service",
+    "analytics-service", "coach-service", "recommendation-service", "notification-service"
   ]
 }
 

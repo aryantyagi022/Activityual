@@ -12,12 +12,12 @@ config:
   RECO_URL: http://recommendation-service
   NOTIF_URL: http://notification-service
 secrets:
-  JWT_SECRET: "change-me-please-change-me-please-32bytes!!"
-  DB_PASSWORD: "unused"
+  PLACEHOLDER: "unused"
+extraEnvFromSecrets:
+  - activityual-shared
 ingress:
   enabled: true
   className: alb
-  host: api.activityual.example.com
   path: /
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
