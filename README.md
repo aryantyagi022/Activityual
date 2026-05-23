@@ -54,20 +54,15 @@ docs/                    setup, walkthrough, api, cloud, demo script
 docker-compose.yml       full local stack
 Makefile                 convenience targets
 ```
-## 4. Quick Links
-* [Local setup](docs/setup.md)
-* [End-to-end walkthrough](docs/walkthrough.md)
-* [API (OpenAPI / Postman)](docs/api/)
-* [Cloud deployment](docs/cloud-deployment.md)
-* [Demo script](docs/demo-script.md)
-* [Network diagram](infra/network-diagram/)
-## 5. Tech Stack
+
+## 4. Tech Stack
 * **Backend** — Java 21, Spring Boot 3.3, Spring Cloud Gateway, Spring Data JPA, Spring AMQP, springdoc-openapi, Flyway, Lombok, jjwt.
 * **Frontend** — SvelteKit 2 + adapter-static, TypeScript, TailwindCSS, Chart.js.
 * **Data** — PostgreSQL 16 (RDS), Chroma, RabbitMQ 3.13.
 * **AI** — Ollama with `llama3.2:3b` for generation and `nomic-embed-text` for embeddings.
 * **Cloud** — AWS EKS 1.30, ECR, RDS, S3, CloudFront, ALB, CloudWatch.
 * **DevOps** — Docker (multi-stage), Helm 3, Terraform 1.9, GitHub Actions (OIDC).
+
 ## 6. Design Notes
 * **DB per service on one RDS instance** — logical isolation at low cost; can be split later.
 * **Transactional outbox + relay** in `tracking-service` — guarantees at-least-once event delivery.
