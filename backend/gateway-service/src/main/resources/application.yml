@@ -3,6 +3,9 @@ spring:
     name: gateway-service
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 120s
       routes:
         - id: auth
           uri: ${AUTH_URL:http://localhost:8081}

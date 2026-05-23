@@ -27,7 +27,7 @@ public class CoachController {
         UUID uid = CurrentUser.requireId();
         List<String> chunks;
         try {
-            chunks = chroma.query(uid.toString(), req.question(), 8);
+            chunks = chroma.query(uid.toString(), req.question(), 4);
         } catch (Exception e) {
             chunks = List.of();
         }

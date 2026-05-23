@@ -75,10 +75,24 @@ spec:
           image: {{ .Values.ollama.image | quote }}
           ports: [ { containerPort: 11434 } ]
           volumeMounts: [ { name: models, mountPath: /root/.ollama } ]
+          readinessProbe:
+            httpGet: { path: /api/tags, port: 11434 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
           lifecycle:
             postStart:
               exec:
-                command: [ "/bin/sh","-c","sleep 5 && ollama pull {{ .Values.ollama.model }} || true" ]
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    sleep 5
+                    ollama pull {{ .Values.ollama.model }} || true
+                    curl -s -X POST http://127.0.0.1:11434/api/generate \
+                      -d '{"model":"{{ .Values.ollama.model }}","prompt":"ping","stream":false,"keep_alive":"-1m","options":{"num_predict":1}}' \
+                      >/dev/null || true
       volumes:
         - name: models
           persistentVolumeClaim: { claimName: ollama-models }

@@ -24,7 +24,12 @@ public class OllamaClient {
                 "model", model,
                 "prompt", prompt,
                 "stream", false,
-                "options", Map.of("temperature", 0.3)
+                "keep_alive", "30m",
+                "options", Map.of(
+                        "temperature", 0.3,
+                        "num_predict", 256,
+                        "num_ctx", 2048
+                )
         );
         JsonNode resp = ollamaClient.post().uri("/api/generate")
                 .bodyValue(body).retrieve().bodyToMono(JsonNode.class).block();
