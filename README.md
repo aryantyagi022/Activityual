@@ -24,8 +24,14 @@ Activityual helps users build consistency in habits like reading, workout, medit
                                             ┌──────────────┐  │
                                             │  RDS Postgres│◄─┘  (DB per service)
                                             └──────────────┘
-         Coach plane:  Ollama (llama3.2:3b)  +  Chroma (vector store)
+          Coach plane:  Ollama (llama3.2:3b)  +  Chroma (vector store)
 ```
+
+> **Network diagram (rendered):** see [`docs/screenshots/network.svg`](docs/screenshots/network.svg).
+> Source: [`infra/network-diagram/network.drawio`](infra/network-diagram/network.drawio) (open in [diagrams.net](https://app.diagrams.net)).
+>
+> ![Activityual network architecture](docs/screenshots/network.svg)
+
 * **Sync**: SvelteKit → ALB → Gateway → service.
 * **Async**: `tracking-service` publishes `activity.logged` via a RabbitMQ topic exchange. Consumers (`analytics`, `coach`, `recommendation`, `notification`) each bind their own queue.
 * **AI plane**: `coach-service` embeds every log into Chroma; `POST /coach/ask` does RAG against Ollama. `recommendation-service` recomputes time-of-day / day-of-week / frequency heuristics on each event.
