@@ -60,11 +60,16 @@ CI will then deploy each microservice via the `backend.yml` workflow.
 
 ## 4. Screenshot checklist
 
-> 👉 **For the actual capture session, follow the click-by-click guide
-> in [`docs/screenshot-checklist.md`](screenshot-checklist.md)** — 35
-> screenshots with direct console deep-links, suggested filenames, and
-> what each frame must contain. Save everything under
-> `docs/screenshots/`.
+> 👉 **Final annotated screenshot doc:**
+> [`docs/cloud-deployment-screenshots.md`](cloud-deployment-screenshots.md)
+> — 48 captured AWS console screenshots organised as Network → Compute
+> → Edge → Storage → Data → Observability → Identity → Live app, each
+> with a one-line caption tying it back to the rubric.
+>
+> 👉 **Capture guide** (for when you re-record/regenerate):
+> [`docs/screenshot-checklist.md`](screenshot-checklist.md) — direct AWS
+> console deep-links, suggested filenames, and what each frame must
+> contain.
 
 Quick summary of what reviewers expect to see (full browser window,
 account `554608989720` and region `us-east-1` visible top-right):

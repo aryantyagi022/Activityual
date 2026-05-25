@@ -31,6 +31,11 @@ Activityual helps users build consistency in habits like reading, workout, medit
 > Source: [`infra/network-diagram/network.drawio`](infra/network-diagram/network.drawio) (open in [diagrams.net](https://app.diagrams.net)).
 >
 > ![Activityual network architecture](docs/screenshots/network.svg)
+>
+> **Live cloud deployment** — annotated AWS console screenshots covering
+> every component (VPC, EKS, ALB, CloudFront, S3, RDS, ECR, CloudWatch,
+> Secrets, IAM) plus the running app:
+> **[docs/cloud-deployment-screenshots.md](docs/cloud-deployment-screenshots.md)**.
 
 * **Sync**: SvelteKit → ALB → Gateway → service.
 * **Async**: `tracking-service` publishes `activity.logged` via a RabbitMQ topic exchange. Consumers (`analytics`, `coach`, `recommendation`, `notification`) each bind their own queue.
