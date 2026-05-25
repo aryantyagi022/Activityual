@@ -2,22 +2,22 @@
   "info": {
     "name": "Activityual API",
     "_postman_id": "activityual-collection-v2",
-    "description": "Full Activityual gateway API.\n\nEvery folder corresponds to one backend microservice. Every request includes a **human-readable description** of what it does, the **service that handles it**, and what to expect back.\n\n**How to use:**\n1. Set the `base` variable (default `http://localhost:8080`).\n2. Run *Auth → Register* (only first time), then *Auth → Login* — the test script auto-fills `accessToken` and `userId` for every later request.\n3. Run *Activities → Create*, copy the returned `id` into the `activityId` collection variable (auto-saved by the test script).\n4. Run *Tracking → Log status* a few times, then explore Analytics / Coach / Recommendations / Notifications.",
+    "description": "Postman collection for the Activityual gateway. One folder per backend service.\n\nQuick start:\n1. Set the `base` variable (defaults to http://localhost:8080).\n2. Run Auth > Register once, then Auth > Login. The login test script stashes accessToken, refreshToken and userId into collection variables so the rest of the requests just work.\n3. Run Activities > Create. The test script copies the returned id into activityId.\n4. From there log a few entries under Tracking and poke around Analytics, Coach, Recommendations and Notifications.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base", "value": "http://localhost:8080", "description": "API gateway base URL. Local: http://localhost:8080. Cloud: https://api.activityual.example.com" },
-    { "key": "accessToken", "value": "", "description": "JWT access token. Auto-populated by the Login request." },
-    { "key": "refreshToken", "value": "", "description": "JWT refresh token. Auto-populated by the Login request." },
-    { "key": "userId", "value": "", "description": "Logged-in user UUID. Auto-populated by the Login request." },
-    { "key": "activityId", "value": "", "description": "Set automatically by Activities → Create, or fill in manually." },
-    { "key": "recommendationId", "value": "", "description": "Set manually after listing recommendations to test the Accept endpoint." },
-    { "key": "notificationId", "value": "", "description": "Set manually after listing notifications to mark one as read." }
+    { "key": "base", "value": "http://localhost:8080", "description": "Gateway URL. Local docker-compose runs on 8080. In cloud, point this at the ALB / CloudFront API domain." },
+    { "key": "accessToken", "value": "", "description": "Filled in by the Login request." },
+    { "key": "refreshToken", "value": "", "description": "Filled in by the Login request." },
+    { "key": "userId", "value": "", "description": "Filled in by the Login request." },
+    { "key": "activityId", "value": "", "description": "Filled in by Activities > Create. You can also paste one in by hand." },
+    { "key": "recommendationId", "value": "", "description": "Paste this in after listing recommendations if you want to hit Accept." },
+    { "key": "notificationId", "value": "", "description": "Paste this in after listing notifications if you want to mark one read." }
   ],
   "item": [
     {
-      "name": "Auth (auth-service · port 8081)",
-      "description": "User registration, login, token refresh, and the current-user lookup. The only service that talks to `authdb`. Passwords are bcrypt-hashed before insert; logins return an access token (30 min) and a refresh token (7 days).",
+      "name": "Auth (auth-service, port 8081)",
+      "description": "Register, login, refresh, and a small /me endpoint. This is the only service that touches authdb. Passwords get bcrypt-hashed on the way in. Login returns a 30 minute access token and a 7 day refresh token.",
       "item": [
         {
           "name": "Register",
@@ -26,7 +26,7 @@
             "url": "{{base}}/auth/register",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": { "mode": "raw", "raw": "{\n  \"email\": \"demo@activityual.dev\",\n  \"password\": \"password123\",\n  \"displayName\": \"Demo User\"\n}" },
-            "description": "Creates a new user. **Plain-English:** sign up with email + password and a display name. The service bcrypt-hashes the password, inserts a row in `authdb.users`, and returns the same payload as Login so the frontend can land you straight on the dashboard.\n\n**Returns:** `{ userId, accessToken, refreshToken, displayName }`.\n**Errors:** `409` if email already taken, `400` on validation failure."
+            "description": "Sign up a new user. Same response shape as Login so the frontend can drop you straight onto the dashboard. Returns 409 if the email is already taken, 400 if validation fails."
           }
         },
         {
@@ -40,7 +40,7 @@
                   "pm.collectionVariables.set('accessToken', j.accessToken);",
                   "pm.collectionVariables.set('refreshToken', j.refreshToken);",
                   "pm.collectionVariables.set('userId', j.userId);",
-                  "console.log('Saved accessToken & userId to collection vars');"
+                  "console.log('Saved accessToken and userId to collection vars');"
                 ]
               }
             }
@@ -50,7 +50,7 @@
             "url": "{{base}}/auth/login",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": { "mode": "raw", "raw": "{\n  \"email\": \"demo@activityual.dev\",\n  \"password\": \"password123\"\n}" },
-            "description": "Authenticate and receive JWTs. **Plain-English:** prove who you are; in return you get a short-lived `accessToken` you put on every other request, and a longer-lived `refreshToken` you trade in when the access token expires.\n\n**Test script** auto-fills `accessToken`, `refreshToken`, and `userId` collection variables — every later request just works."
+            "description": "Logs in and returns an access + refresh token pair. The test script writes both tokens and the userId into collection variables, so every other request in here picks them up automatically."
           }
         },
         {
@@ -60,7 +60,7 @@
             "url": "{{base}}/auth/refresh",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
-            "description": "Trade a valid refresh token for a fresh access + refresh pair. **Plain-English:** keep me logged in without asking for password again. Returns 401 if the refresh token is expired/revoked."
+            "description": "Swap a valid refresh token for a new access + refresh pair. Returns 401 if the refresh token has expired or been revoked."
           }
         },
         {
@@ -69,14 +69,14 @@
             "method": "GET",
             "url": "{{base}}/auth/me",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Returns the profile of the currently-authenticated user. **Plain-English:** ‘who am I?’ — used by the frontend to render the avatar + name in the navbar."
+            "description": "Returns the current user's profile. The frontend uses this to render the avatar and name in the navbar."
           }
         }
       ]
     },
     {
-      "name": "Activities (activity-service · port 8082)",
-      "description": "CRUD on the user’s activity catalogue (the *what I want to track* list). Stores rows in `activitydb.activities` scoped to the JWT user. Frequency values: `DAILY`, `WEEKLY_3`, `WEEKLY_5`, `WEEKLY_7`, `CUSTOM`.",
+      "name": "Activities (activity-service, port 8082)",
+      "description": "CRUD on the user's activity catalogue, i.e. the list of habits you want to track. Rows live in activitydb.activities, scoped to the JWT user. Frequency is one of DAILY, WEEKLY_3, WEEKLY_5, WEEKLY_7, CUSTOM.",
       "item": [
         {
           "name": "Create",
@@ -101,7 +101,7 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" }
             ],
             "body": { "mode": "raw", "raw": "{\n  \"title\": \"Read 20 pages\",\n  \"category\": \"reading\",\n  \"frequency\": \"DAILY\",\n  \"notes\": \"Before bed\"\n}" },
-            "description": "Add a new activity to track. **Plain-English:** ‘I want to do X, this often.’ Returns the persisted activity including the generated `id` — the test script saves it to `{{activityId}}` for use in later requests."
+            "description": "Add a new activity to track. Returns the saved row including the generated id. The test script writes that id into {{activityId}} so the rest of the requests can use it."
           }
         },
         {
@@ -110,7 +110,7 @@
             "method": "GET",
             "url": "{{base}}/activities",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "List every activity belonging to the current user. **Plain-English:** show me my catalogue. The frontend uses this on `/activities` and to populate dropdowns."
+            "description": "All activities belonging to the current user. Used by the /activities page and to populate dropdowns elsewhere."
           }
         },
         {
@@ -119,7 +119,7 @@
             "method": "GET",
             "url": "{{base}}/activities/{{activityId}}",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Fetch one activity. **Plain-English:** give me the details of this one habit. 404 if it doesn’t exist or belongs to someone else."
+            "description": "Fetch a single activity. 404 if it doesn't exist or belongs to a different user."
           }
         },
         {
@@ -132,7 +132,7 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" }
             ],
             "body": { "mode": "raw", "raw": "{\n  \"title\": \"Read 30 pages\",\n  \"category\": \"reading\",\n  \"frequency\": \"DAILY\",\n  \"notes\": \"Updated goal\"\n}" },
-            "description": "Edit an existing activity. **Plain-English:** change the title, category, frequency, or notes."
+            "description": "Edit title, category, frequency or notes on an existing activity."
           }
         },
         {
@@ -141,14 +141,14 @@
             "method": "DELETE",
             "url": "{{base}}/activities/{{activityId}}",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Remove an activity. **Plain-English:** I’m not doing this habit anymore. Soft-delete in the DB; the analytics service keeps history."
+            "description": "Soft-deletes the activity. Analytics keeps the history so old streaks and charts don't break."
           }
         }
       ]
     },
     {
-      "name": "Tracking (tracking-service · port 8083)",
-      "description": "Record progress and read what’s due. **This is the only service that publishes the `activity.logged` event** to RabbitMQ via the transactional outbox.",
+      "name": "Tracking (tracking-service, port 8083)",
+      "description": "Where you actually log progress. This is the one service that publishes the activity.logged event to RabbitMQ, and it does it through a transactional outbox so a log can never be saved without the event going out (or vice versa).",
       "item": [
         {
           "name": "Log status",
@@ -160,7 +160,7 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" }
             ],
             "body": { "mode": "raw", "raw": "{\n  \"activityId\": \"{{activityId}}\",\n  \"activityTitle\": \"Read 20 pages\",\n  \"activityCategory\": \"reading\",\n  \"status\": \"done\"\n}" },
-            "description": "Mark today’s entry as `done`, `missed`, or `completed`. **Plain-English:** ‘I did it’ / ‘I skipped it’ / ‘I finished the goal’.\n\n**Internally:** inserts a row in `trackingdb.activity_logs` AND a row in `trackingdb.outbox_events` in one DB transaction. A scheduled relay then publishes the event to the RabbitMQ topic exchange `activity.events` within ~2 seconds. Four consumers react: analytics (streaks), coach (embedding into Chroma), recommendation (recompute), notification (in-app alert)."
+            "description": "Mark today's entry as done, missed or completed. Under the hood this writes one row to trackingdb.activity_logs and one row to trackingdb.outbox_events in the same transaction. A scheduled relay picks up the outbox row a couple of seconds later and publishes to the activity.events topic exchange. Four services consume it: analytics recomputes streaks, coach embeds the log into Chroma, recommendation recomputes nudges, notification drops a row in the inbox."
           }
         },
         {
@@ -169,7 +169,7 @@
             "method": "GET",
             "url": "{{base}}/logs/due-today",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Returns the list of activities that are due today and haven’t been marked yet. **Plain-English:** ‘what do I owe myself today?’ Used by the dashboard widget."
+            "description": "Activities due today that haven't been ticked off yet. Backs the 'due today' widget on the dashboard."
           }
         },
         {
@@ -178,7 +178,7 @@
             "method": "GET",
             "url": "{{base}}/logs/due-week",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Same as Due-today but for the rolling 7-day window. **Plain-English:** ‘what’s on my plate this week?’"
+            "description": "Same idea as due-today but for a rolling 7 day window."
           }
         },
         {
@@ -187,14 +187,14 @@
             "method": "GET",
             "url": "{{base}}/logs/recent?limit=20",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Most recent log entries for the current user, newest first. **Plain-English:** ‘show me my activity history’. Powers the timeline strip on the dashboard."
+            "description": "Most recent log entries, newest first. Powers the timeline strip on the dashboard."
           }
         }
       ]
     },
     {
-      "name": "Analytics (analytics-service · port 8084)",
-      "description": "Read-only aggregates built from `activity.logged` events. Lives in `analyticsdb` as denormalised fact tables for fast reads.",
+      "name": "Analytics (analytics-service, port 8084)",
+      "description": "Read-only aggregates built from activity.logged events. Stored as denormalised fact tables in analyticsdb so the dashboard reads stay cheap.",
       "item": [
         {
           "name": "Summary",
@@ -202,7 +202,7 @@
             "method": "GET",
             "url": "{{base}}/analytics/{{userId}}",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Top-level dashboard numbers: total logs, done count, missed count, consistency percentage, most-consistent activity, least-consistent activity. **Plain-English:** ‘give me everything the dashboard needs in one call’."
+            "description": "Everything the dashboard needs in one call: total logs, done count, missed count, consistency percentage, and the most and least consistent activities."
           }
         },
         {
@@ -211,14 +211,14 @@
             "method": "GET",
             "url": "{{base}}/analytics/{{userId}}/streaks",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Per-activity current and longest streak counts. **Plain-English:** ‘how many days in a row have I been doing each habit?’"
+            "description": "Current and longest streak per activity."
           }
         }
       ]
     },
     {
-      "name": "Coach (coach-service · port 8085)",
-      "description": "The AI Activity Coach — Retrieval Augmented Generation. Embeds every log into Chroma; on each question, retrieves the user’s most relevant log chunks, builds a grounded prompt, and calls Ollama (`llama3.2:3b`).",
+      "name": "Coach (coach-service, port 8085)",
+      "description": "The AI coach. Every log gets embedded into Chroma. When you ask a question it pulls back the most relevant chunks of your own history, builds a grounded prompt, and calls Ollama (llama3.2:3b) for the answer.",
       "item": [
         {
           "name": "Ask",
@@ -230,14 +230,14 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" }
             ],
             "body": { "mode": "raw", "raw": "{\n  \"question\": \"Why do I keep missing my workout?\"\n}" },
-            "description": "Ask the AI Coach a free-form question. **Plain-English:** chat with a coach that has actually read your logs.\n\n**Returns:** `{ answer: string, chunks: [{ text, timestamp, score }] }`. The frontend shows `chunks` next to the answer to prove the response is grounded in real data (no hallucination).\n\n**Try these:**\n- *Why do I keep missing my workout?*\n- *What's my most consistent habit this month?*\n- *Give me a plan to improve my reading streak.*"
+            "description": "Ask the coach a free-form question. Response shape is { answer, chunks: [{ text, timestamp, score }] }. The frontend shows the chunks next to the answer so you can see it is grounded in your actual logs instead of made up.\n\nThings worth trying:\n- Why do I keep missing my workout?\n- What's my most consistent habit this month?\n- Give me a plan to improve my reading streak."
           }
         }
       ]
     },
     {
-      "name": "Recommendations (recommendation-service · port 8086)",
-      "description": "Personalised timing / day-of-week / frequency suggestions. Computed by deterministic SQL heuristics over each user’s log history, recomputed on every `activity.logged` event.",
+      "name": "Recommendations (recommendation-service, port 8086)",
+      "description": "Suggestions about when and how often to do each activity. These are plain SQL heuristics over the user's log history, recomputed every time an activity.logged event comes in.",
       "item": [
         {
           "name": "List",
@@ -245,7 +245,7 @@
             "method": "GET",
             "url": "{{base}}/recommendations/{{userId}}",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Return all current recommendations for the user. **Plain-English:** ‘what should I change about my routine?’ Each item carries a `confidence` score; UI hides anything below 0.6."
+            "description": "All current recommendations for the user. Each one has a confidence score; the UI hides anything below 0.6 so you don't get noise."
           }
         },
         {
@@ -258,7 +258,7 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" }
             ],
             "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"activityId\": \"{{activityId}}\"\n}" },
-            "description": "Force a recompute for one activity, bypassing the event-driven path. **Plain-English:** ‘re-run the analysis right now’. Useful for testing and demos."
+            "description": "Force a recompute for one activity instead of waiting for the next event. Mostly useful when demoing or debugging."
           }
         },
         {
@@ -271,7 +271,7 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" }
             ],
             "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"recommendationId\": \"{{recommendationId}}\",\n  \"accepted\": true\n}" },
-            "description": "Mark a recommendation as accepted (or rejected). **Plain-English:** ‘yes, I’ll try that’. Stored so we can later measure whether accepted nudges actually improve completion."
+            "description": "Mark a recommendation as accepted or rejected. We keep this so later on we can check whether accepted nudges actually improve completion rates."
           }
         },
         {
@@ -280,14 +280,14 @@
             "method": "GET",
             "url": "{{base}}/recommendations/{{userId}}/heatmap/{{activityId}}",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Per-activity completion heatmap: matrix of day-of-week × time-of-day with completion rate per cell. **Plain-English:** ‘when am I best at this habit?’ Powers the heatmap chart on `/recommendations`."
+            "description": "A day-of-week by time-of-day grid with completion rate per cell. The /recommendations page uses it to render the heatmap chart."
           }
         }
       ]
     },
     {
-      "name": "Notifications (notification-service · port 8087)",
-      "description": "In-app inbox. Pure event consumer — every `activity.logged` event produces a notification row in `notifdb.notifications`.",
+      "name": "Notifications (notification-service, port 8087)",
+      "description": "In-app inbox. Pure consumer; every activity.logged event ends up as a row in notifdb.notifications.",
       "item": [
         {
           "name": "List",
@@ -295,7 +295,7 @@
             "method": "GET",
             "url": "{{base}}/notifications/{{userId}}",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Return notifications for the user, newest first, with an unread badge count. **Plain-English:** ‘show me my inbox’."
+            "description": "Notifications for the user, newest first, with an unread count for the badge."
           }
         },
         {
@@ -304,7 +304,7 @@
             "method": "POST",
             "url": "{{base}}/notifications/{{notificationId}}/read",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "description": "Mark a single notification as read. **Plain-English:** ‘I’ve seen this one’."
+            "description": "Mark one notification as read."
           }
         }
       ]
