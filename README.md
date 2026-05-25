@@ -17,6 +17,9 @@ Stack:
 It also runs locally with `docker compose` if you want to try it without AWS.
 Live URL: https://d17bqzy8fgqhxi.cloudfront.net
 Demo login: `aryantyagi0@gmail.com` / `Aryan1234`
+
+**Github Repo link: https://github.com/aryantyagi022/Activityual**
+
 ---
 ## Architecture
 ```
