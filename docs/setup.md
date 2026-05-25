@@ -1,74 +1,67 @@
-# Local Setup
-
-This guide brings the entire stack up on your laptop with **Docker Compose**.
-
-## Prerequisites
-
-* Docker 24+ and Docker Compose v2
-* JDK 21 + Maven 3.9 (only if you want to run a service outside the container)
-* Node 20 + pnpm/npm (only if you want to run the frontend dev server)
-* At least 8 GB free RAM (Ollama + 8 Spring services + Postgres + Rabbit + Chroma)
-
-## 1. Configure environment
-
+# Local setup
+The whole stack runs on a laptop with Docker Compose. You only need AWS if
+you also want to deploy it.
+## What you need
+- Docker 24+ and Compose v2.
+- At least 8 GB of free RAM. The Ollama model alone wants ~3 GB, then there
+  are 8 Spring services, Postgres, RabbitMQ and Chroma on top.
+- Optionally JDK 21 + Maven 3.9, if you want to run a single service from your
+  IDE instead of as a container.
+- Optionally Node 20 + pnpm, if you want the SvelteKit dev server with hot
+  reload instead of the built static site.
+## Bring it up
 ```bash
 cp .env.example .env
+make up                 # builds and starts everything
+docker compose ps       # check that all containers are healthy
 ```
-
-The defaults work out of the box; only the JWT secret needs replacing for any real deployment.
-
-## 2. Start the stack
-
+First boot does three things in order:
+1. Runs `infra/local/postgres-init/00-create-databases.sql` against the
+   Postgres container, which creates one logical database per service
+   (`authdb`, `activitydb`, `trackingdb`, ...).
+2. Starts the platform services: RabbitMQ (management UI on
+   <http://localhost:15672>, guest/guest), Chroma on
+   <http://localhost:8000>, Ollama on <http://localhost:11434>.
+3. Builds and starts the 8 Spring services and the SvelteKit frontend.
+The first Maven build inside the container can take a few minutes because the
+dependency cache is empty. Subsequent rebuilds are fast.
+## Pull the AI models
+You only need to do this once per machine. The models are stored in a Docker
+volume so they survive `docker compose down`.
 ```bash
-make up                  # builds and starts every service
-docker compose ps        # confirm everything is healthy
-```
-
-First boot will:
-
-* create one Postgres database per service (`authdb`, `activitydb`, …) via the init script,
-* start RabbitMQ (management UI at <http://localhost:15672> — guest / guest),
-* start Chroma at <http://localhost:8000>,
-* start Ollama at <http://localhost:11434>,
-* launch the 8 Spring microservices and the SvelteKit frontend.
-
-## 3. Pull the AI models (one-time)
-
-```bash
-make ollama-pull         # pulls llama3.2:3b
+make ollama-pull                                       # llama3.2:3b
 docker compose exec ollama ollama pull nomic-embed-text
 ```
-
-## 4. Open the app
-
-* Frontend: <http://localhost:5173>
-* Gateway:  <http://localhost:8080>
-* RabbitMQ UI: <http://localhost:15672>
-* Swagger per service: `http://localhost:<port>/swagger` (8081-8087)
-
-## 5. Sample journey
-
-1. Register a user → land on the dashboard.
-2. Add an activity (e.g. *Workout · WEEKLY_3*).
-3. Mark it `done` / `missed` / `completed`.
-4. Watch the dashboard refresh with streaks and consistency.
-5. Open `/coach` and ask *"Why do I keep missing my workout?"*.
-6. Open `/recommendations` after ≥4 logs for the same activity.
-
-## 6. Useful commands
-
+If you skip this step the Coach page will return an error the first time you
+ask a question, because Ollama tries to pull the model on demand and the
+request times out.
+## Open the app
+- Frontend: <http://localhost:5173>
+- Gateway (API): <http://localhost:8080>
+- RabbitMQ management UI: <http://localhost:15672> (guest/guest)
+- Per-service Swagger: `http://localhost:<port>/swagger`, ports 8081–8087.
+## A quick sanity check
+1. Register a new user. You should land on the dashboard.
+2. Add an activity, for example "Workout / workout / WEEKLY_3".
+3. Mark it `done` once and `missed` once.
+4. Open `/coach` and ask "How am I doing?". You should get an answer back
+   plus the chunks it pulled from Chroma on the right.
+5. Open `/recommendations`. You need around four logs on the same activity
+   before the heuristics produce anything useful.
+## Day-to-day commands
 ```bash
-make logs svc=coach-service        # tail logs of one service
-docker compose restart tracking-service
-docker compose down -v             # wipe everything including volumes
+make logs svc=coach-service              # tail one service
+docker compose restart tracking-service  # restart one container
+docker compose down -v                   # wipe everything including DB volumes
 ```
-
-## 7. Running a single service outside Docker
-
+## Running one service from your IDE
+This is useful if you want to attach a debugger to a single service while the
+rest of the stack keeps running in Compose.
 ```bash
+docker compose stop auth-service         # stop the container
 cd backend
-mvn -pl auth-service -am spring-boot:run
+mvn -pl auth-service -am spring-boot:run # run from source
 ```
-
-Set the env vars from `.env` first.
-
+Make sure the env vars from `.env` are exported in the shell, otherwise the
+service will try to connect to `localhost:5432` for Postgres (which won't be
+the Compose Postgres unless you forward the port).
