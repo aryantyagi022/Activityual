@@ -27,10 +27,12 @@ Activityual helps users build consistency in habits like reading, workout, medit
           Coach plane:  Ollama (llama3.2:3b)  +  Chroma (vector store)
 ```
 
-> **Network diagram (rendered):** see [`docs/screenshots/network.svg`](docs/screenshots/network.svg).
-> Source: [`infra/network-diagram/network.drawio`](infra/network-diagram/network.drawio) (open in [diagrams.net](https://app.diagrams.net)).
+> **Network diagram (rendered):** open
+> [`infra/network-diagram/network.drawio`](infra/network-diagram/network.drawio)
+> in [diagrams.net](https://app.diagrams.net) or view the exported
+> image below.
 >
-> ![Activityual network architecture](docs/screenshots/network.svg)
+> ![Activityual network architecture](docs/screenshots/NetworkDiagram.drawio.png)
 >
 > **Live cloud deployment** — annotated AWS console screenshots covering
 > every component (VPC, EKS, ALB, CloudFront, S3, RDS, ECR, CloudWatch,

@@ -11,7 +11,6 @@ Identity → Live application**.
 > - [README.md](../README.md) — system design.
 > - [cloud-deployment.md](cloud-deployment.md) — what we provisioned and how.
 > - [walkthrough.md](walkthrough.md) — end-to-end user scenario the app screenshots follow.
-> - [screenshot-checklist.md](screenshot-checklist.md) — the capture checklist.
 
 ---
 
